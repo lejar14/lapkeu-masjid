@@ -32,7 +32,7 @@ def format_tanggal_indonesia(tanggal):
     return f"{tanggal.day} {bulan_indonesia[tanggal.month]} {tanggal.year}"
 
 # Fungsi untuk membuat file Excel laporan dengan merge untuk tanggal yang sama, orientasi landscape,
-# dan mengatur alignment sel yang di-merge ke tengah (middle)
+# dan mengatur alignment sel yang di-merge ke tengah (middle) serta prefix "Rp. " untuk nominal
 def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
@@ -56,7 +56,7 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
     workbook = writer.book
     worksheet = writer.sheets['Sheet1']
     
-    # Atur orientasi halaman ke landscape
+    # Atur orientasi halaman ke landscape dan ukuran kertas A4
     worksheet.set_landscape()
     worksheet.set_paper(9)
     
@@ -78,7 +78,6 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
         'font_size': 16,
         'align': 'center'
     })
-    # Tambahkan 'valign': 'vcenter' agar hasil merge memiliki middle alignment
     date_format = workbook.add_format({
         'border': 1,
         'align': 'center',
@@ -117,7 +116,6 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
         start_excel_row = data_start + i
         current_date = date_values[i]
         j = i
-        # Cari baris berikutnya yang memiliki tanggal sama
         while j + 1 < len(date_values) and date_values[j+1] == current_date:
             j += 1
         end_excel_row = data_start + j
@@ -153,7 +151,7 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
     jumlah_angka_format = workbook.add_format({
         'bold': True,
         'border': 1,
-        'num_format': '"Rp. " #,##0',  # tambahkan prefix "Rp. "
+        'num_format': '"Rp. " #,##0',
         'align': 'right',
         'bg_color': '#D3D3D3'
     })
@@ -265,44 +263,78 @@ if not st.session_state.transaksi.empty and st.session_state.transaksi.iloc[0]['
             pengeluaran = st.session_state.transaksi.at[i, 'Pengeluaran']
             st.session_state.transaksi.at[i, 'Saldo'] = prev_balance + pemasukan - pengeluaran
 
+# Pastikan flag notifikasi ada di session_state
+if "transaction_added" not in st.session_state:
+    st.session_state.transaction_added = False
+
+# Callback untuk menghapus notifikasi saat ada perubahan input
+def clear_success():
+    st.session_state.transaction_added = False
+
 # Tabs utama
 tab1, tab2, tab3 = st.tabs(["📝 Input Transaksi", "📊 Daftar Transaksi", "📑 Preview & Unduh Laporan"])
 
 # Tab 1: Input Transaksi
 with tab1:
     st.header("Tambah Transaksi")
-    with st.form("transaksi_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            tanggal_default = datetime.date(tahun, bulan, 1)
-            tanggal = st.date_input("Tanggal", tanggal_default, 
-                                    min_value=datetime.date(tahun, bulan, 1), 
-                                    max_value=datetime.date(tahun, bulan, get_last_day_of_month(tahun, bulan)))
-            keterangan = st.text_area("Keterangan", height=100)
-        with col2:
-            jenis_transaksi = st.radio("Jenis Transaksi", ["Pemasukan", "Pengeluaran"])
-            nominal = st.number_input("Nominal (Rp)", min_value=0, step=1000)
-        submitted = st.form_submit_button("Tambah Transaksi", use_container_width=True)
-        if submitted:
-            if not keterangan:
-                st.error("Keterangan tidak boleh kosong!")
-            elif nominal == 0:
-                st.error("Nominal tidak boleh 0!")
-            else:
-                pemasukan = nominal if jenis_transaksi == "Pemasukan" else 0
-                pengeluaran = nominal if jenis_transaksi == "Pengeluaran" else 0
-                saldo_terakhir = st.session_state.transaksi['Saldo'].iloc[-1] if not st.session_state.transaksi.empty else 0
-                saldo_baru = saldo_terakhir + pemasukan - pengeluaran
-                transaksi_baru = pd.DataFrame({
-                    'Tanggal': [tanggal],
-                    'Keterangan': [keterangan],
-                    'Pemasukan': [pemasukan],
-                    'Pengeluaran': [pengeluaran],
-                    'Saldo': [saldo_baru]
-                })
-                st.session_state.transaksi = pd.concat([st.session_state.transaksi, transaksi_baru], ignore_index=True)
-                st.success("Transaksi berhasil ditambahkan!")
+    # Menggunakan kolom untuk mengatur tampilan input
+    col1, col2 = st.columns(2)
 
+    with col1:
+        tanggal = st.date_input(
+            "Tanggal",
+            datetime.date(tahun, bulan, 1),
+            min_value=datetime.date(tahun, bulan, 1),
+            max_value=datetime.date(tahun, bulan, get_last_day_of_month(tahun, bulan)),
+            key="tanggal_input",
+            on_change=clear_success
+        )
+        keterangan = st.text_area(
+            "Keterangan",
+            height=100,
+            key="keterangan_input",
+            on_change=clear_success
+        )
+    with col2:
+        jenis_transaksi = st.radio(
+            "Jenis Transaksi",
+            ["Pemasukan", "Pengeluaran"],
+            key="jenis_input",
+            on_change=clear_success
+        )
+        nominal = st.number_input(
+            "Nominal (Rp)",
+            min_value=0,
+            step=1000,
+            key="nominal_input",
+            on_change=clear_success
+        )
+
+    # Tombol tambah transaksi
+    if st.button("Tambah Transaksi"):
+        if not keterangan:
+            st.error("Keterangan tidak boleh kosong!")
+        elif nominal == 0:
+            st.error("Nominal tidak boleh 0!")
+        else:
+            pemasukan = nominal if jenis_transaksi == "Pemasukan" else 0
+            pengeluaran = nominal if jenis_transaksi == "Pengeluaran" else 0
+            saldo_terakhir = st.session_state.transaksi['Saldo'].iloc[-1] if not st.session_state.transaksi.empty else 0
+            saldo_baru = saldo_terakhir + pemasukan - pengeluaran
+            transaksi_baru = pd.DataFrame({
+                'Tanggal': [tanggal],
+                'Keterangan': [keterangan],
+                'Pemasukan': [pemasukan],
+                'Pengeluaran': [pengeluaran],
+                'Saldo': [saldo_baru]
+            })
+            st.session_state.transaksi = pd.concat([st.session_state.transaksi, transaksi_baru], ignore_index=True)
+            st.session_state.transaction_added = True
+
+    # Tampilkan notifikasi jika transaksi baru telah ditambahkan
+    if st.session_state.transaction_added:
+        st.success("Transaksi berhasil ditambahkan!")
+        
 # Tab 2: Daftar Transaksi
 with tab2:
     st.header(f"Daftar Transaksi - {bulan_tahun}")
@@ -338,17 +370,27 @@ with tab2:
         col3.metric("Saldo Akhir", f"Rp {saldo_akhir:,.0f}".replace(',', '.'))
         
         st.markdown("### Kelola Transaksi")
+        # Jika terdapat transaksi selain saldo awal, berikan pilihan untuk menghapus transaksi pada baris tertentu.
         if len(st.session_state.transaksi) > 1:
-            if st.button("Hapus Transaksi Terakhir", use_container_width=True):
-                st.session_state.transaksi = st.session_state.transaksi.iloc[:-1]
-                st.success("Transaksi terakhir berhasil dihapus!")
+            # Buat list opsi untuk transaksi yang dapat dihapus (indeks 1 s/d n)
+            df_temp = st.session_state.transaksi.iloc[1:].reset_index(drop=True)
+            options = [f"Transaksi ke-{i+2}: {df_temp.loc[i, 'Keterangan']} ({format_tanggal_indonesia(df_temp.loc[i, 'Tanggal'])})" 
+                       for i in range(len(df_temp))]
+            selected_option = st.selectbox("Pilih transaksi yang akan dihapus", options)
+            if st.button("Hapus Transaksi", use_container_width=True):
+                # Tentukan indeks asli: opsi ke-i berarti indeks = i+1
+                index_to_delete = options.index(selected_option) + 1
+                st.session_state.transaksi = st.session_state.transaksi.drop(st.session_state.transaksi.index[index_to_delete]).reset_index(drop=True)
+                # Re-kalkulasi saldo
+                for i in range(1, len(st.session_state.transaksi)):
+                    st.session_state.transaksi.at[i, 'Saldo'] = st.session_state.transaksi.at[i-1, 'Saldo'] + st.session_state.transaksi.at[i, 'Pemasukan'] - st.session_state.transaksi.at[i, 'Pengeluaran']
+                st.success("Transaksi berhasil dihapus!")
                 st.rerun()
     else:
         st.info("Belum ada transaksi. Silakan tambahkan transaksi baru di tab Input Transaksi.")
 
 # Tab 3: Preview & Unduh Laporan
 with tab3:
-    # Tampilkan judul laporan 3 baris secara center
     st.markdown("<h2 style='text-align: center;'>LAPORAN KEUANGAN KAS MASJID JAM'I AL FAIZIN</h2>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center;'>LINGKUNGAN RT 010-RW 005 KEL BENDUNGAN KEC. CILEGON</h2>", unsafe_allow_html=True)
     st.markdown(f"<h2 style='text-align: center;'>Periode Bulan {nama_bulan} {tahun}</h2>", unsafe_allow_html=True)

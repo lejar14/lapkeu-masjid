@@ -58,11 +58,11 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
     
     # Atur orientasi halaman ke landscape
     worksheet.set_landscape()
-    worksheet.set_paper(9) 
+    worksheet.set_paper(9)
     
     # Definisi format sel
     money_format = workbook.add_format({
-        'num_format': '#,##0',
+        'num_format': '"Rp. " #,##0',  # format dengan prefix "Rp. "
         'border': 1,
         'align': 'right'
     })
@@ -78,7 +78,7 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
         'font_size': 16,
         'align': 'center'
     })
-    # Perbaikan: tambahkan 'valign': 'vcenter' untuk memastikan hasil merge memiliki middle alignment
+    # Tambahkan 'valign': 'vcenter' agar hasil merge memiliki middle alignment
     date_format = workbook.add_format({
         'border': 1,
         'align': 'center',
@@ -153,7 +153,7 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
     jumlah_angka_format = workbook.add_format({
         'bold': True,
         'border': 1,
-        'num_format': '#,##0',
+        'num_format': '"Rp. " #,##0',  # tambahkan prefix "Rp. "
         'align': 'right',
         'bg_color': '#D3D3D3'
     })

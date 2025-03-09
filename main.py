@@ -272,7 +272,7 @@ def clear_success():
     st.session_state.transaction_added = False
 
 # Tabs utama
-tab1, tab2, tab3 = st.tabs(["📝 Input Transaksi", "📊 Daftar Transaksi", "📑 Preview & Unduh Laporan"])
+tab1, tab3 = st.tabs(["📝 Input Transaksi", "📑 Preview & Unduh Laporan"])
 
 # Tab 1: Input Transaksi
 with tab1:
@@ -336,7 +336,6 @@ with tab1:
         st.success("Transaksi berhasil ditambahkan!")
         
 # Tab 2: Daftar Transaksi
-with tab2:
     st.header(f"Daftar Transaksi - {bulan_tahun}")
     if not st.session_state.transaksi.empty:
         df_display = st.session_state.transaksi.copy()

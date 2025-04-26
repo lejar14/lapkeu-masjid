@@ -223,8 +223,7 @@ with tab1:
     # Input Keterangan
     keterangan = st.text_area("Keterangan")
 
-    # Input Nominal
-    nominal = st.number_input("Nominal", min_value=0)
+
 
     if st.button("Tambah Transaksi"):
         if not keterangan:

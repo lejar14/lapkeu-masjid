@@ -189,19 +189,23 @@ with tab1:
     st.header("Tambah Transaksi")
     col1, col2 = st.columns(2)
     with col1:
+        min_date = datetime.date(tahun, bulan, 1)
+        max_date = datetime.date(tahun, bulan, get_last_day_of_month(tahun, bulan))
+
+        # Validasi agar default tanggal tetap dalam rentang min-max
+        default_date = st.session_state.get("tanggal_input", datetime.date.today())
+        if default_date < min_date:
+            default_date = min_date
+        elif default_date > max_date:
+            default_date = max_date
+
         tanggal = st.date_input(
             "Tanggal",
-            value=st.session_state.tanggal_input,
-            min_value=datetime.date(tahun, bulan, 1),
-            max_value=datetime.date(tahun, bulan, get_last_day_of_month(tahun, bulan)),
-            key="tanggal_input_widget"
+            value=default_date,
+            min_value=min_date,
+            max_value=max_date
         )
-        keterangan = st.text_area(
-            "Keterangan",
-            value=st.session_state.keterangan_input,
-            height=100,
-            key="keterangan_input_widget"
-        )
+
     with col2:
         jenis_transaksi = st.radio(
             "Jenis Transaksi",

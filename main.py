@@ -220,6 +220,11 @@ with tab1:
             value=st.session_state.nominal_input,
             key="nominal_input_widget"
         )
+    # Input Keterangan
+    keterangan = st.text_area("Keterangan")
+
+    # Input Nominal
+    nominal = st.number_input("Nominal", min_value=0)
 
     if st.button("Tambah Transaksi"):
         if not keterangan:

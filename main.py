@@ -153,7 +153,6 @@ def to_excel(df, nama_ketua, nama_bendahara, bulan, tahun):
     writer.close()
     return output.getvalue()
 
-
 # ---------- Sidebar ----------
 with st.sidebar:
     st.header("Pengaturan Laporan")
@@ -227,23 +226,23 @@ if df_all.empty:
     st.info("Belum ada data transaksi untuk periode ini.")
 else:
     df_display = df_all.rename(columns={
-        "tanggal": "Tanggal",
-        "keterangan": "Keterangan",
-        "pemasukan": "Pemasukan",
-        "pengeluaran": "Pengeluaran"
-    })
+    "tanggal": "Tanggal",
+    "keterangan": "Keterangan",
+    "pemasukan": "Pemasukan",
+    "pengeluaran": "Pengeluaran"
+})
 
-    # ubah tampilan nominal di Streamlit biar pakai format Rp.
-    df_display["Pemasukan"] = df_display["Pemasukan"].apply(lambda x: f"Rp. {x:,.0f}".replace(",", "."))
-    df_display["Pengeluaran"] = df_display["Pengeluaran"].apply(lambda x: f"Rp. {x:,.0f}".replace(",", "."))
-    df_display["Saldo"] = df_display["Saldo"].apply(lambda x: f"Rp. {x:,.0f}".replace(",", "."))
+# ubah tampilan nominal di Streamlit biar pakai format Rp.
+df_display["Pemasukan"] = df_display["Pemasukan"].apply(lambda x: f"Rp. {x:,.0f}".replace(",", "."))
+df_display["Pengeluaran"] = df_display["Pengeluaran"].apply(lambda x: f"Rp. {x:,.0f}".replace(",", "."))
+df_display["Saldo"] = df_display["Saldo"].apply(lambda x: f"Rp. {x:,.0f}".replace(",", "."))
 
-    st.data_editor(
-        df_display[["Tanggal", "Keterangan", "Pemasukan", "Pengeluaran", "Saldo"]],
-        hide_index=True,
-        use_container_width=True,
-        key="editor"
-    )
+st.data_editor(
+    df_display[["Tanggal", "Keterangan", "Pemasukan", "Pengeluaran", "Saldo"]],
+    hide_index=True,
+    use_container_width=True,
+    key="editor"
+)
 
 
 # ---------- Ringkasan ----------

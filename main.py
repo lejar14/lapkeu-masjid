@@ -9,9 +9,12 @@ import os
 from io import BytesIO
 import xlsxwriter
 
-app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+PREFIX = os.environ.get("PREFIX", "").rstrip("/")
+
+app = FastAPI(root_path=PREFIX)
+app.mount(f"{PREFIX}/static", StaticFiles(directory="static"), name="static")
 _jinja = Environment(loader=FileSystemLoader("templates"), autoescape=True)
+_jinja.globals["prefix"] = PREFIX
 
 DB_PATH = "data/masjid.db"
 os.makedirs("data", exist_ok=True)
@@ -200,14 +203,14 @@ async def tambah(
             (periode, tanggal, keterangan.strip(), masuk, keluar),
         )
         conn.commit()
-    return RedirectResponse(f"/?periode={periode}&ok=tambah", status_code=303)
+    return RedirectResponse(f"{PREFIX}/?periode={periode}&ok=tambah", status_code=303)
 
 
 @app.post("/hapus/{tid}")
 async def hapus(tid: int, periode: str = Form(...)):
     conn.execute("DELETE FROM transaksi WHERE id=?", (tid,))
     conn.commit()
-    return RedirectResponse(f"/?periode={periode}&ok=hapus", status_code=303)
+    return RedirectResponse(f"{PREFIX}/?periode={periode}&ok=hapus", status_code=303)
 
 
 @app.post("/saldo-awal")
@@ -216,7 +219,7 @@ async def update_saldo_awal(
     saldo_awal: float = Form(0),
 ):
     saldo_awal_set(periode, saldo_awal)
-    return RedirectResponse(f"/?periode={periode}&ok=saldo", status_code=303)
+    return RedirectResponse(f"{PREFIX}/?periode={periode}&ok=saldo", status_code=303)
 
 
 @app.post("/edit/{tid}")
@@ -236,7 +239,7 @@ async def edit_transaksi(
             (tanggal, keterangan.strip(), masuk, keluar, tid),
         )
         conn.commit()
-    return RedirectResponse(f"/?periode={periode}&ok=edit", status_code=303)
+    return RedirectResponse(f"{PREFIX}/?periode={periode}&ok=edit", status_code=303)
 
 
 @app.post("/settings")
@@ -249,7 +252,7 @@ async def update_settings(
         setting_set("nama_ketua", nama_ketua.strip())
     if nama_bendahara.strip():
         setting_set("nama_bendahara", nama_bendahara.strip())
-    return RedirectResponse(f"/?periode={periode}&ok=nama", status_code=303)
+    return RedirectResponse(f"{PREFIX}/?periode={periode}&ok=nama", status_code=303)
 
 
 @app.get("/export")

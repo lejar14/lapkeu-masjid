@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="{{ prefix }}/static/style.css">
 </head>
 <body>
 
@@ -41,15 +41,15 @@
   <!-- Navigasi Periode + Saldo Awal -->
   <div class="card period-nav">
     <div class="period-nav-top">
-      <a href="/?periode={{ periode_prev }}" class="btn-nav" title="Bulan sebelumnya">&#9664;</a>
+      <a href="{{ prefix }}/?periode={{ periode_prev }}" class="btn-nav" title="Bulan sebelumnya">&#9664;</a>
       <div>
         <div class="period-name">{{ periode_label }}</div>
         <div class="period-sub">Laporan Keuangan Kas</div>
       </div>
-      <a href="/?periode={{ periode_next }}" class="btn-nav" title="Bulan berikutnya">&#9654;</a>
+      <a href="{{ prefix }}/?periode={{ periode_next }}" class="btn-nav" title="Bulan berikutnya">&#9654;</a>
     </div>
     <div class="period-saldo-row">
-      <form action="/saldo-awal" method="post" class="saldo-form">
+      <form action="{{ prefix }}/saldo-awal" method="post" class="saldo-form">
         <input type="hidden" name="periode" value="{{ periode }}">
         <label for="saldo_awal_input">Saldo Awal</label>
         <input id="saldo_awal_input" type="number" name="saldo_awal" min="0" step="1000"
@@ -80,13 +80,13 @@
     {% if edit_row %}
     <div class="card-title-row">
       <h2 class="card-title" style="margin-bottom:0">Edit Transaksi</h2>
-      <a href="/?periode={{ periode }}" class="btn-cancel">&#10005; Batal</a>
+      <a href="{{ prefix }}/?periode={{ periode }}" class="btn-cancel">&#10005; Batal</a>
     </div>
     <div class="edit-banner">&#9998; Sedang mengedit transaksi ini. Ubah data di bawah lalu klik <strong>Simpan Perubahan</strong>.</div>
-    <form action="/edit/{{ edit_row.id }}" method="post" class="form" style="margin-top:1.1rem">
+    <form action="{{ prefix }}/edit/{{ edit_row.id }}" method="post" class="form" style="margin-top:1.1rem">
     {% else %}
     <h2 class="card-title">Tambah Transaksi</h2>
-    <form action="/tambah" method="post" class="form">
+    <form action="{{ prefix }}/tambah" method="post" class="form">
     {% endif %}
       <input type="hidden" name="periode" value="{{ periode }}">
 
@@ -163,8 +163,8 @@
             <td class="col-act">
               {% if not r.is_awal %}
               <div class="row-actions">
-                <a href="/?periode={{ periode }}&edit={{ r.id }}" class="btn-edit">&#9998; Edit</a>
-                <form action="/hapus/{{ r.id }}" method="post"
+                <a href="{{ prefix }}/?periode={{ periode }}&edit={{ r.id }}" class="btn-edit">&#9998; Edit</a>
+                <form action="{{ prefix }}/hapus/{{ r.id }}" method="post"
                       onsubmit="return confirm('Yakin mau hapus transaksi ini?')">
                   <input type="hidden" name="periode" value="{{ periode }}">
                   <button type="submit" class="btn-del">&#10005; Hapus</button>
@@ -181,14 +181,14 @@
   </div>
 
   <!-- Download Excel -->
-  <a href="/export?periode={{ periode }}" class="btn-export">
+  <a href="{{ prefix }}/export?periode={{ periode }}" class="btn-export">
     &#128229; Download Laporan Excel &mdash; {{ periode_label }}
   </a>
 
   <!-- Pengaturan (nama saja) -->
   <details class="card settings-card">
     <summary class="settings-toggle">&#9881; Pengaturan Nama</summary>
-    <form action="/settings" method="post" class="form" style="margin-top:1.25rem">
+    <form action="{{ prefix }}/settings" method="post" class="form" style="margin-top:1.25rem">
       <input type="hidden" name="periode" value="{{ periode }}">
 
       <div class="form-row">
